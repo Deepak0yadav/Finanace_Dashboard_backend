@@ -1,0 +1,19 @@
+﻿{
+  "name": "finance-dashboard-backend-original",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Original finance dashboard backend built with Node.js core modules and JSON persistence",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "node",
+    "finance",
+    "rbac",
+    "assignment"
+  ],
+  "license": "MIT"
+}
