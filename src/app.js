@@ -7,10 +7,12 @@ const { createGuards } = require("./middleware/guards");
 const { RecordsRepository } = require("./repositories/recordsRepository");
 const { UsersRepository } = require("./repositories/usersRepository");
 const { registerAuthRoutes } = require("./routes/authRoutes");
+const { registerDashboardRoutes } = require("./routes/dashboardRoutes");
 const { registerHealthRoutes } = require("./routes/healthRoutes");
 const { registerRecordRoutes } = require("./routes/recordRoutes");
 const { registerUserRoutes } = require("./routes/userRoutes");
 const { createAuthService } = require("./services/authService");
+const { createDashboardService } = require("./services/dashboardService");
 const { createRecordsService } = require("./services/recordsService");
 const { createUsersService } = require("./services/usersService");
 
@@ -46,6 +48,7 @@ async function createApp(overrides = {}) {
 
   const authService = createAuthService({ config, usersRepository });
   const recordsService = createRecordsService({ recordsRepository, usersRepository });
+  const dashboardService = createDashboardService({ recordsRepository, usersRepository });
   const guards = createGuards({ authService });
 
   const router = createRouter();
@@ -53,6 +56,7 @@ async function createApp(overrides = {}) {
   registerAuthRoutes(router, { authService });
   registerUserRoutes(router, { guards, usersService });
   registerRecordRoutes(router, { guards, recordsService });
+  registerDashboardRoutes(router, { dashboardService, guards });
 
   const handle = (req, res) =>
     router.handle(req, res, {
