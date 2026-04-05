@@ -49,9 +49,9 @@ function filterRecords(records, filters) {
 }
 
 function createDashboardService({ recordsRepository, usersRepository }) {
-  function getSummary(query) {
+  async function getSummary(query) {
     const filters = validateDashboardQuery(query);
-    const records = filterRecords(recordsRepository.list(), filters);
+    const records = filterRecords(await recordsRepository.list(), filters);
     let totalIncome = 0;
     let totalExpenses = 0;
 
@@ -71,9 +71,9 @@ function createDashboardService({ recordsRepository, usersRepository }) {
     };
   }
 
-  function getCategoryBreakdown(query) {
+  async function getCategoryBreakdown(query) {
     const filters = validateDashboardQuery(query);
-    const records = filterRecords(recordsRepository.list(), filters);
+    const records = filterRecords(await recordsRepository.list(), filters);
     const categoryMap = new Map();
 
     for (const record of records) {
@@ -103,9 +103,9 @@ function createDashboardService({ recordsRepository, usersRepository }) {
       .sort((left, right) => left.category.localeCompare(right.category));
   }
 
-  function getMonthlyTrends(query) {
+  async function getMonthlyTrends(query) {
     const filters = validateDashboardQuery(query);
-    const records = filterRecords(recordsRepository.list(), filters);
+    const records = filterRecords(await recordsRepository.list(), filters);
     const monthMap = new Map();
 
     for (const record of records) {
@@ -135,13 +135,13 @@ function createDashboardService({ recordsRepository, usersRepository }) {
       .sort((left, right) => left.month.localeCompare(right.month));
   }
 
-  function getRecentActivity(query) {
+  async function getRecentActivity(query) {
     const filters = validateDashboardQuery(query);
-    const records = filterRecords(recordsRepository.list(), filters)
+    const records = filterRecords(await recordsRepository.list(), filters)
       .sort(sortRecords)
       .slice(0, filters.limit);
 
-    return records.map((record) => toRecordResponse(record, usersRepository));
+    return Promise.all(records.map((record) => toRecordResponse(record, usersRepository)));
   }
 
   return {

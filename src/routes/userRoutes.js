@@ -6,7 +6,7 @@
     "/api/users",
     adminOnly(async (ctx) => {
       ctx.json(200, {
-        data: usersService.listUsers(),
+        data: await usersService.listUsers(),
       });
     }),
   );
@@ -16,7 +16,7 @@
     "/api/users/:id",
     adminOnly(async (ctx) => {
       ctx.json(200, {
-        data: usersService.getUserById(ctx.params.id),
+        data: await usersService.getUserById(ctx.params.id),
       });
     }),
   );

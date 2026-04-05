@@ -10,8 +10,8 @@
   };
 }
 
-function toRecordResponse(record, usersRepository) {
-  const creator = usersRepository.findById(record.createdBy);
+async function toRecordResponse(record, usersRepository) {
+  const creator = await usersRepository.findById(record.createdBy);
 
   return {
     id: record.id,
@@ -24,14 +24,14 @@ function toRecordResponse(record, usersRepository) {
     updatedAt: record.updatedAt,
     createdBy: creator
       ? {
-          id: creator.id,
-          name: creator.name,
-          email: creator.email,
-          role: creator.role,
-        }
+        id: creator.id,
+        name: creator.name,
+        email: creator.email,
+        role: creator.role,
+      }
       : {
-          id: record.createdBy,
-        },
+        id: record.createdBy,
+      },
   };
 }
 

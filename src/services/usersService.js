@@ -101,7 +101,7 @@ function validateUpdateUser(input) {
 
 function createUsersService({ usersRepository }) {
   async function ensureSeedAdmin(seedAdmin) {
-    if (usersRepository.list().length > 0) {
+    if ((await usersRepository.countAll()) > 0) {
       return null;
     }
 
@@ -129,7 +129,7 @@ function createUsersService({ usersRepository }) {
 
   async function createUser(input) {
     const validated = validateCreateUser(input);
-    const existing = usersRepository.findByEmail(validated.email);
+    const existing = await usersRepository.findByEmail(validated.email);
 
     if (existing) {
       throw conflict("A user with that email already exists");
@@ -151,15 +151,15 @@ function createUsersService({ usersRepository }) {
     return toPublicUser(user);
   }
 
-  function listUsers() {
-    return usersRepository
-      .list()
+  async function listUsers() {
+    const users = await usersRepository.list();
+    return users
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
       .map(toPublicUser);
   }
 
-  function getUserById(userId) {
-    const user = usersRepository.findById(userId);
+  async function getUserById(userId) {
+    const user = await usersRepository.findById(userId);
     if (!user) {
       throw notFound("User not found");
     }
@@ -168,7 +168,7 @@ function createUsersService({ usersRepository }) {
   }
 
   async function updateUser(userId, input) {
-    const currentUser = usersRepository.findById(userId);
+    const currentUser = await usersRepository.findById(userId);
     if (!currentUser) {
       throw notFound("User not found");
     }
@@ -183,7 +183,7 @@ function createUsersService({ usersRepository }) {
     const isActiveAdminNow = currentUser.role === "admin" && currentUser.status === "active";
     const staysActiveAdmin = nextUser.role === "admin" && nextUser.status === "active";
 
-    if (isActiveAdminNow && !staysActiveAdmin && usersRepository.countActiveAdmins() === 1) {
+    if (isActiveAdminNow && !staysActiveAdmin && (await usersRepository.countActiveAdmins()) === 1) {
       throw conflict("At least one active admin must remain in the system");
     }
 

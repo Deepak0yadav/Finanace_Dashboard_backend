@@ -173,18 +173,19 @@ function createRecordsService({ recordsRepository, usersRepository }) {
     return toRecordResponse(record, usersRepository);
   }
 
-  function listRecords(query) {
+  async function listRecords(query) {
     const filters = validateListQuery(query);
-    const records = recordsRepository
-      .list()
+    const records = (await recordsRepository.list())
       .filter((record) => matchesRecord(record, filters))
       .sort(sortRecords);
 
     const total = records.length;
     const startIndex = (filters.page - 1) * filters.limit;
-    const pageData = records
-      .slice(startIndex, startIndex + filters.limit)
-      .map((record) => toRecordResponse(record, usersRepository));
+    const pageData = await Promise.all(
+      records
+        .slice(startIndex, startIndex + filters.limit)
+        .map((record) => toRecordResponse(record, usersRepository)),
+    );
 
     return {
       data: pageData,
@@ -197,8 +198,8 @@ function createRecordsService({ recordsRepository, usersRepository }) {
     };
   }
 
-  function getRecordById(recordId) {
-    const record = recordsRepository.findById(recordId);
+  async function getRecordById(recordId) {
+    const record = await recordsRepository.findById(recordId);
     if (!record) {
       throw notFound("Financial record not found");
     }
@@ -207,7 +208,7 @@ function createRecordsService({ recordsRepository, usersRepository }) {
   }
 
   async function updateRecord(recordId, input) {
-    const currentRecord = recordsRepository.findById(recordId);
+    const currentRecord = await recordsRepository.findById(recordId);
     if (!currentRecord) {
       throw notFound("Financial record not found");
     }

@@ -2,7 +2,7 @@
 
 A fresh backend implementation for the finance data processing and access control assignment.
 
-This project is intentionally built with Node.js core modules and a JSON-backed data store instead of a large framework. The goal was to keep the code easy to review, easy to explain in an interview, and still structured around clear backend concerns like routing, services, persistence, validation, and role-based access control.
+This project is built with Node.js core modules and now supports MongoDB persistence through a lightweight repository layer. A JSON file fallback is also available for local-only usage.
 
 ## Assignment Coverage
 
@@ -15,22 +15,23 @@ This project is intentionally built with Node.js core modules and a JSON-backed 
 - Pagination for record listing
 - Dashboard summary APIs for totals, category breakdown, monthly trends, and recent activity
 - Input validation with structured error responses
-- Persistent storage using a local JSON file
+- Persistent storage using MongoDB
 - Integration tests using the built-in Node.js test runner
 
 ## Tech Choices
 
 - Runtime: Node.js 22+
 - HTTP server: native `http` module
-- Persistence: JSON file on disk
+- Persistence: MongoDB (`mongodb` driver)
+- Fallback persistence: local JSON file on disk
 - Auth: signed bearer token using HMAC
 - Password hashing: `crypto.scrypt`
 - Tests: `node:test`
 
 ## Why This Approach
 
-- No external runtime dependencies means the project can run immediately on a clean machine with Node installed.
-- File-based persistence is enough for an assessment project and makes the data flow easy to inspect.
+- MongoDB is used for durable, scalable persistence aligned with real backend deployment patterns.
+- Repository and service layers keep business rules independent from storage details.
 - Service and repository layers keep business rules separate from transport concerns.
 - The custom router and guards show backend fundamentals directly instead of hiding them behind framework magic.
 
@@ -70,6 +71,9 @@ node --test
 
 ```env
 PORT=5000
+USE_MONGODB=true
+MONGODB_URI=mongodb://127.0.0.1:27017/finance_dashboard
+MONGODB_DB=finance_dashboard
 DATA_FILE=./data/database.json
 TOKEN_SECRET=replace-this-secret
 TOKEN_TTL_SECONDS=86400
@@ -78,7 +82,17 @@ ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=admin12345
 ```
 
-On first boot, the application creates a seed admin user if the data file is empty.
+For MongoDB Atlas, use a URI in this format:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-host>/finance_dashboard?retryWrites=true&w=majority
+```
+
+When `USE_MONGODB=true` (or `MONGODB_URI` is provided), the app uses MongoDB collections (`users`, `records`).
+
+If MongoDB is disabled, the app falls back to `DATA_FILE` JSON persistence.
+
+On first boot, the application creates a seed admin user if no users exist in the active storage backend.
 
 ## Default Access Model
 
@@ -185,7 +199,8 @@ Errors are returned in a consistent shape:
 
 - The persistence layer is designed for single-instance local use, not multi-server production use.
 - Record ownership is global to the finance dashboard, while write access is reserved for admins.
-- A JSON data file was chosen for simplicity and portability within the assignment timeline.
+- MongoDB is the default persistence path for this backend.
+- JSON file storage remains as a fallback for local runs and tests.
 - The token format is intentionally lightweight but still signed and expiry-aware.
 
 ## Test Coverage
@@ -197,3 +212,13 @@ The included integration tests cover:
 - Record creation and read/write permission boundaries
 - Analyst access to dashboard summaries
 - Protection against removing the last active admin
+
+## Submission Checklist
+
+- `npm install` completed successfully
+- `.env` is present locally but not committed
+- `npm start` runs without errors
+- `node --test --experimental-test-isolation=none tests/api.test.js` passes
+- Core flow endpoints behave correctly in order (including negative tests)
+- No secrets are hardcoded in source files
+- README reflects storage/auth choices and assumptions

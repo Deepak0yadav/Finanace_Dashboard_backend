@@ -30,7 +30,7 @@ function validateLoginInput(input) {
 function createAuthService({ config, usersRepository }) {
   async function login(input) {
     const validated = validateLoginInput(input);
-    const user = usersRepository.findByEmail(validated.email);
+    const user = await usersRepository.findByEmail(validated.email);
 
     if (!user) {
       throw unauthorized("Invalid email or password");
@@ -75,7 +75,7 @@ function createAuthService({ config, usersRepository }) {
       throw unauthorized("Invalid or expired token");
     }
 
-    const user = usersRepository.findById(payload.sub);
+    const user = await usersRepository.findById(payload.sub);
     if (!user) {
       throw unauthorized("Invalid or expired token");
     }

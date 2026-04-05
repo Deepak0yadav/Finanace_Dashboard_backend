@@ -6,7 +6,7 @@
     "GET",
     "/api/records",
     readRecords(async (ctx) => {
-      ctx.json(200, recordsService.listRecords(ctx.query));
+      ctx.json(200, await recordsService.listRecords(ctx.query));
     }),
   );
 
@@ -15,7 +15,7 @@
     "/api/records/:id",
     readRecords(async (ctx) => {
       ctx.json(200, {
-        data: recordsService.getRecordById(ctx.params.id),
+        data: await recordsService.getRecordById(ctx.params.id),
       });
     }),
   );

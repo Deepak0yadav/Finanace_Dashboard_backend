@@ -8,6 +8,7 @@ const DEFAULT_STATE = {
 
 class DataStore {
   constructor(filePath) {
+    this.kind = "file";
     this.filePath = filePath;
     this.state = structuredClone(DEFAULT_STATE);
     this.writeChain = Promise.resolve();
@@ -46,6 +47,8 @@ class DataStore {
 
     return this.writeChain;
   }
+
+  async close() { }
 }
 
 module.exports = {

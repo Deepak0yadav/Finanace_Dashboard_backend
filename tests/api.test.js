@@ -27,6 +27,7 @@ async function createTestServer() {
   return {
     async close() {
       await new Promise((resolve) => server.close(resolve));
+      await app.close();
       await fs.rm(tempDirectory, { recursive: true, force: true });
     },
     baseUrl: `http://127.0.0.1:${address.port}`,

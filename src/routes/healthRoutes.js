@@ -1,11 +1,16 @@
-﻿function registerHealthRoutes(router, { config, store }) {
+﻿function registerHealthRoutes(router, { config, recordsRepository, usersRepository }) {
   router.register("GET", "/", async (ctx) => {
+    const [users, records] = await Promise.all([
+      usersRepository.countAll(),
+      recordsRepository.countAll(),
+    ]);
+
     ctx.json(200, {
       name: "Finance Dashboard Backend",
       status: "running",
-      storage: config.dataFile,
-      users: store.state.users.length,
-      records: store.state.records.length,
+      storage: config.storageLabel,
+      users,
+      records,
     });
   });
 

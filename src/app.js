@@ -1,6 +1,7 @@
 ﻿const http = require("node:http");
 const path = require("node:path");
 
+const { MongoStore } = require("./core/mongoStore");
 const { DataStore } = require("./core/store");
 const { createRouter } = require("./core/router");
 const { createGuards } = require("./middleware/guards");
@@ -17,8 +18,17 @@ const { createRecordsService } = require("./services/recordsService");
 const { createUsersService } = require("./services/usersService");
 
 function loadConfig(overrides = {}) {
+  const mongoUri = overrides.mongoUri || process.env.MONGODB_URI || "";
+  const useMongo =
+    overrides.useMongo !== undefined
+      ? Boolean(overrides.useMongo)
+      : String(process.env.USE_MONGODB || "").toLowerCase() === "true" || Boolean(mongoUri);
+
   return {
     port: Number(overrides.port || process.env.PORT || 5000),
+    useMongo,
+    mongoUri,
+    mongoDbName: overrides.mongoDbName || process.env.MONGODB_DB || "finance_dashboard",
     dataFile:
       overrides.dataFile ||
       process.env.DATA_FILE ||
@@ -32,12 +42,22 @@ function loadConfig(overrides = {}) {
       email: overrides.seedAdmin?.email || process.env.ADMIN_EMAIL || "admin@example.com",
       password: overrides.seedAdmin?.password || process.env.ADMIN_PASSWORD || "admin12345",
     },
+    storageLabel: useMongo
+      ? `mongodb:${overrides.mongoDbName || process.env.MONGODB_DB || "finance_dashboard"}`
+      : overrides.dataFile || process.env.DATA_FILE || path.join(process.cwd(), "data", "database.json"),
   };
 }
 
 async function createApp(overrides = {}) {
   const config = loadConfig(overrides);
-  const store = new DataStore(config.dataFile);
+  if (config.useMongo && !config.mongoUri) {
+    throw new Error("MONGODB_URI is required when MongoDB mode is enabled");
+  }
+
+  const store = config.useMongo
+    ? new MongoStore({ uri: config.mongoUri, dbName: config.mongoDbName })
+    : new DataStore(config.dataFile);
+
   await store.load();
 
   const usersRepository = new UsersRepository(store);
@@ -52,7 +72,7 @@ async function createApp(overrides = {}) {
   const guards = createGuards({ authService });
 
   const router = createRouter();
-  registerHealthRoutes(router, { config, store });
+  registerHealthRoutes(router, { config, recordsRepository, usersRepository });
   registerAuthRoutes(router, { authService });
   registerUserRoutes(router, { guards, usersService });
   registerRecordRoutes(router, { guards, recordsService });
@@ -72,6 +92,9 @@ async function createApp(overrides = {}) {
       return http.createServer(handle);
     },
     handle,
+    async close() {
+      await store.close();
+    },
     store,
   };
 }

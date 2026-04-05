@@ -6,7 +6,7 @@
     "/api/dashboard/summary",
     analystOrAdmin(async (ctx) => {
       ctx.json(200, {
-        data: dashboardService.getSummary(ctx.query),
+        data: await dashboardService.getSummary(ctx.query),
       });
     }),
   );
@@ -16,7 +16,7 @@
     "/api/dashboard/categories",
     analystOrAdmin(async (ctx) => {
       ctx.json(200, {
-        data: dashboardService.getCategoryBreakdown(ctx.query),
+        data: await dashboardService.getCategoryBreakdown(ctx.query),
       });
     }),
   );
@@ -26,7 +26,7 @@
     "/api/dashboard/trends/monthly",
     analystOrAdmin(async (ctx) => {
       ctx.json(200, {
-        data: dashboardService.getMonthlyTrends(ctx.query),
+        data: await dashboardService.getMonthlyTrends(ctx.query),
       });
     }),
   );
@@ -36,7 +36,7 @@
     "/api/dashboard/activity/recent",
     analystOrAdmin(async (ctx) => {
       ctx.json(200, {
-        data: dashboardService.getRecentActivity(ctx.query),
+        data: await dashboardService.getRecentActivity(ctx.query),
       });
     }),
   );
