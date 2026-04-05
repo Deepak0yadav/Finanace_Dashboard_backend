@@ -1,9 +1,16 @@
 ﻿const http = require("node:http");
 const path = require("node:path");
 
-const { createRouter } = require("./core/router");
 const { DataStore } = require("./core/store");
+const { createRouter } = require("./core/router");
+const { createGuards } = require("./middleware/guards");
+const { RecordsRepository } = require("./repositories/recordsRepository");
+const { UsersRepository } = require("./repositories/usersRepository");
+const { registerAuthRoutes } = require("./routes/authRoutes");
 const { registerHealthRoutes } = require("./routes/healthRoutes");
+const { registerUserRoutes } = require("./routes/userRoutes");
+const { createAuthService } = require("./services/authService");
+const { createUsersService } = require("./services/usersService");
 
 function loadConfig(overrides = {}) {
   return {
@@ -29,10 +36,27 @@ async function createApp(overrides = {}) {
   const store = new DataStore(config.dataFile);
   await store.load();
 
+  const usersRepository = new UsersRepository(store);
+  const recordsRepository = new RecordsRepository(store);
+
+  const usersService = createUsersService({ usersRepository });
+  await usersService.ensureSeedAdmin(config.seedAdmin);
+
+  const authService = createAuthService({ config, usersRepository });
+  const guards = createGuards({ authService });
+
   const router = createRouter();
   registerHealthRoutes(router, { config, store });
+  registerAuthRoutes(router, { authService });
+  registerUserRoutes(router, { guards, usersService });
 
-  const handle = (req, res) => router.handle(req, res, { config, store });
+  const handle = (req, res) =>
+    router.handle(req, res, {
+      config,
+      recordsRepository,
+      store,
+      usersRepository,
+    });
 
   return {
     config,
