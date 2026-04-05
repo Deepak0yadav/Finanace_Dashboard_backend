@@ -8,8 +8,10 @@ const { RecordsRepository } = require("./repositories/recordsRepository");
 const { UsersRepository } = require("./repositories/usersRepository");
 const { registerAuthRoutes } = require("./routes/authRoutes");
 const { registerHealthRoutes } = require("./routes/healthRoutes");
+const { registerRecordRoutes } = require("./routes/recordRoutes");
 const { registerUserRoutes } = require("./routes/userRoutes");
 const { createAuthService } = require("./services/authService");
+const { createRecordsService } = require("./services/recordsService");
 const { createUsersService } = require("./services/usersService");
 
 function loadConfig(overrides = {}) {
@@ -43,12 +45,14 @@ async function createApp(overrides = {}) {
   await usersService.ensureSeedAdmin(config.seedAdmin);
 
   const authService = createAuthService({ config, usersRepository });
+  const recordsService = createRecordsService({ recordsRepository, usersRepository });
   const guards = createGuards({ authService });
 
   const router = createRouter();
   registerHealthRoutes(router, { config, store });
   registerAuthRoutes(router, { authService });
   registerUserRoutes(router, { guards, usersService });
+  registerRecordRoutes(router, { guards, recordsService });
 
   const handle = (req, res) =>
     router.handle(req, res, {
